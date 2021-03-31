@@ -1,5 +1,5 @@
 use ::std::fmt;
-use std::{convert::TryFrom, io::Write};
+use std::{convert::TryFrom, io::Write, process::exit};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Command {
@@ -343,15 +343,34 @@ mod tests {
     }
 }
 
+/// Help text for cli usage.
+const HELP_TEXT: &'static str = "brnfk - A brainfuck interpreter written in rust.
+USAGE: brnfk [INPUT_FILE]";
+
 fn main() {
-    let data = ::std::fs::read("../resources/programs/mandel.b").unwrap();
-    let it = std::time::Instant::now();
-    {
-        let program = Program::load(data).unwrap();
+    let args = ::std::env::args_os();
 
-        let mut brnfk = Brainfuck::<StdinInput, StdoutOutput>::default();
+    let input_file = args.skip(1).next().unwrap_or_else(|| {
+        eprintln!("{}", HELP_TEXT);
+        exit(1);
+    });
 
-        brnfk.run(&program);
-    }
-    println!("{:?}", it.elapsed());
+    let data = match ::std::fs::read(&input_file) {
+        Ok(data) => data,
+        Err(err) => {
+            eprintln!("Failed to read input_file at {:?}: {}", input_file, err);
+            exit(1);
+        }
+    };
+
+    let program = match Program::load(data) {
+        Ok(program) => program,
+        Err(err) => {
+            eprintln!("Failed load program: {:?}", err);
+            exit(1);
+        }
+    };
+
+    let mut brnfk = Brainfuck::<StdinInput, StdoutOutput>::default();
+    brnfk.run(&program);
 }
