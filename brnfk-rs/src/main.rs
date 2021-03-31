@@ -173,7 +173,7 @@ impl Iterator for StdinInput {
     fn next(&mut self) -> Option<Self::Item> {
         let mut line = String::new();
         ::std::io::stdin().read_line(&mut line).ok();
-        Some(line.bytes().next()?)
+        line.bytes().next()
     }
 }
 impl Input for StdinInput {}
@@ -344,13 +344,13 @@ mod tests {
 }
 
 /// Help text for cli usage.
-const HELP_TEXT: &'static str = "brnfk - A brainfuck interpreter written in rust.
+const HELP_TEXT: &str = "brnfk - A brainfuck interpreter written in rust.
 USAGE: brnfk [INPUT_FILE]";
 
 fn main() {
-    let args = ::std::env::args_os();
+    let mut args = ::std::env::args_os();
 
-    let input_file = args.skip(1).next().unwrap_or_else(|| {
+    let input_file = args.nth(1).unwrap_or_else(|| {
         eprintln!("{}", HELP_TEXT);
         exit(1);
     });
